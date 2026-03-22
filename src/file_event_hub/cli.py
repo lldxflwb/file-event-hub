@@ -17,7 +17,7 @@ def _cmd_serve(args: argparse.Namespace) -> None:
     )
 
 
-def _cmd_install_hook(args: argparse.Namespace) -> None:
+def _cmd_install_hook(_args: argparse.Namespace) -> None:
     """Install the Claude Code PostToolUse hook."""
     settings_path = Path.home() / ".claude" / "settings.json"
 
@@ -28,9 +28,8 @@ def _cmd_install_hook(args: argparse.Namespace) -> None:
         settings_path.parent.mkdir(parents=True, exist_ok=True)
         settings = {}
 
-    # Resolve hook script path from project root
-    project_root = Path(__file__).resolve().parent.parent.parent
-    hook_script = project_root / "hook" / "post_tool_use.sh"
+    # Resolve hook script path from package directory
+    hook_script = Path(__file__).resolve().parent / "hook" / "post_tool_use.sh"
 
     hook_entry = {
         "matcher": "Edit|Write",

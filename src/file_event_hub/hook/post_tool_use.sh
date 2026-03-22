@@ -2,7 +2,9 @@
 # file-event-hub PostToolUse hook
 # Captures Edit/Write events and POSTs to the event hub server
 
-# Must never block or crash Claude Code
+# Redirect all stderr to /dev/null for truly silent failure
+exec 2>/dev/null
+
 set +e
 
 SERVER_URL="${FILE_EVENT_HUB_URL:-http://localhost:9120}"
@@ -25,7 +27,7 @@ if [ "$tool_name" = "Edit" ]; then
   # Read current file content post-modification (Edit tool only provides the diff)
   new_content=""
   if [ -f "$file_path" ]; then
-    new_content=$(cat "$file_path" 2>/dev/null || true)
+    new_content=$(cat "$file_path" || true)
   fi
 
   event_json=$(jq -n \
@@ -43,7 +45,7 @@ if [ "$tool_name" = "Edit" ]; then
       new_text: ($inp.tool_input.new_string // "")
     }')
 else
-  # For Write, tool_input.content already has the full file content — no need to re-read from disk
+  # For Write, tool_input.content already has the full file content
   event_json=$(jq -n \
     --arg fp "$file_path" \
     --arg tool "$tool_name" \
@@ -57,11 +59,12 @@ else
     }')
 fi
 
+# POST in background to avoid blocking Claude Code
 curl -s -X POST "${SERVER_URL}/api/events" \
   -H "Content-Type: application/json" \
   -d "$event_json" \
   --connect-timeout 2 \
   --max-time 5 \
-  > /dev/null 2>&1
+  > /dev/null &
 
 exit 0

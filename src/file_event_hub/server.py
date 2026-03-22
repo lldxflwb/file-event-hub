@@ -93,6 +93,6 @@ async def websocket_endpoint(ws: WebSocket):
 
 
 # Mount static files LAST so API routes take priority
-_static_dir = Path(__file__).resolve().parent.parent.parent / "static"
+_static_dir = Path(__file__).resolve().parent / "static"
 if _static_dir.is_dir():
     app.mount("/", StaticFiles(directory=str(_static_dir), html=True), name="static")
